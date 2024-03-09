@@ -1,6 +1,8 @@
 import sys
 import math
 
+import rospy
+import sensor_msgs.msg._Joy
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout, QPushButton
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtGui import QPainter, QBrush, QPen
@@ -8,7 +10,7 @@ from PyQt5.QtCore import Qt
 
 
 class Joystick(QWidget):
-    def __init__(self):
+    def __init__(self, name = 'Left'):
         super().__init__()
 
         self.window_title = 'Joystick'
@@ -28,6 +30,8 @@ class Joystick(QWidget):
         self.stat_label_margin = 10
         self.stat_label = QLabel(self)
 
+        self.control_name = name
+        self.joy_pub = rospy.Publisher('joy', sensor_msgs.msg.Joy, queue_size=1)
         self.init_ui()
 
     def init_ui(self):
@@ -44,8 +48,6 @@ class Joystick(QWidget):
         font.setPointSize(10)
 
         self.setMouseTracking(True)
-
-        self.show()
 
     def resizeEvent(self, event):
         self.wnd_fit_size = min(self.width(), self.height())
@@ -126,6 +128,26 @@ class Joystick(QWidget):
         self.stick_pos = stick_pos_buf
         self.repaint()
 
+        max_distance = (self.circle_diameter - self.stick_diameter) / 2
+        self.strength = self.get_strength()
+        self.angle = self.get_angle(in_deg=False)
+
+        if self.control_name == 'Left':
+            joy_msg = sensor_msgs.msg.Joy()
+            joy_msg.header.stamp = rospy.Time.now()
+            joy_msg.header.frame_id = 'joy'
+            joy_msg.axes = [self.stick_pos[0]/ max_distance, self.stick_pos[1]/max_distance, 0, 0, 0, 0, 0, 0]
+            joy_msg.buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        else:
+            joy_msg = sensor_msgs.msg.Joy()
+            joy_msg.header.stamp = rospy.Time.now()
+            joy_msg.header.frame_id = 'joy'
+            joy_msg.axes = [0, 0, 0, self.stick_pos[0]/ max_distance, self.stick_pos[1]/max_distance, 0, 0, 0]
+            joy_msg.buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        self.joy_pub.publish(joy_msg)
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.is_mouse_down = True
@@ -134,6 +156,23 @@ class Joystick(QWidget):
         if event.button() == Qt.LeftButton:
             self.is_mouse_down = False
             self.stick_pos = [0, 0]
+            if self.control_name == 'Left':
+                joy_msg = sensor_msgs.msg.Joy()
+                joy_msg.header.stamp = rospy.Time.now()
+                joy_msg.header.frame_id = 'joy'
+                joy_msg.axes = [0, 0, 0, 0, 0, 0, 0, 0]
+                joy_msg.buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                self.joy_pub.publish(joy_msg)
+                print('Left Stick Released')
+
+            else:
+                joy_msg = sensor_msgs.msg.Joy()
+                joy_msg.header.stamp = rospy.Time.now()
+                joy_msg.header.frame_id = 'joy'
+                joy_msg.axes = [0, 0, 0, 0, 0, 0, 0, 0]
+                joy_msg.buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                self.joy_pub.publish(joy_msg)
+                print('Right Stick Released')
             self.repaint()
 
     # Get Strength With Argument
@@ -166,8 +205,11 @@ class JoyButton(QWidget):
 
         self.button1 = QPushButton('A', self)
         self.button2 = QPushButton('B', self)
-        self.button3 = QPushButton('C', self)
-        self.button4 = QPushButton('D', self)
+        self.button3 = QPushButton('X', self)
+        self.button4 = QPushButton('Y', self)
+
+        self.button_msg = None
+        self.botton_pub = rospy.Publisher('joy', sensor_msgs.msg.Joy, queue_size=1)
 
         self.button1.clicked.connect(self.on_button1_clicked)
         self.button2.clicked.connect(self.on_button2_clicked)
@@ -180,28 +222,57 @@ class JoyButton(QWidget):
         self.button_layout.addWidget(self.button4)
 
         self.setLayout(self.button_layout)
-        self.show()
     
     def on_button1_clicked(self):
-        print('Button 1 Clicked')
+        joy_msg = sensor_msgs.msg.Joy()
+        joy_msg.header.stamp = rospy.Time.now()
+        joy_msg.header.frame_id = 'joy'
+        joy_msg.axes = [0, 0, 0, 0, 0, 0, 0, 0]
+        joy_msg.buttons = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        self.botton_pub.publish(joy_msg)
+        print('Button A Clicked')
     
     def on_button2_clicked(self):
-        print('Button 2 Clicked')
+        joy_msg = sensor_msgs.msg.Joy()
+        joy_msg.header.stamp = rospy.Time.now()
+        joy_msg.header.frame_id = 'joy'
+        joy_msg.axes = [0, 0, 0, 0, 0, 0, 0, 0]
+        joy_msg.buttons = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        self.botton_pub.publish(joy_msg)
+        print('Button B Clicked')
     
     def on_button3_clicked(self):
-        print('Button 3 Clicked')
+        joy_msg = sensor_msgs.msg.Joy()
+        joy_msg.header.stamp = rospy.Time.now()
+        joy_msg.header.frame_id = 'joy'
+        joy_msg.axes = [0, 0, 0, 0, 0, 0, 0, 0]
+        joy_msg.buttons = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        self.botton_pub.publish(joy_msg)
+        print('Button X Clicked')
     
     def on_button4_clicked(self):
-        print('Button 4 Clicked')
+        joy_msg = sensor_msgs.msg.Joy()
+        joy_msg.header.stamp = rospy.Time.now()
+        joy_msg.header.frame_id = 'joy'
+        joy_msg.axes = [0, 0, 0, 0, 0, 0, 0, 0]
+        joy_msg.buttons = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
 
+        self.botton_pub.publish(joy_msg)
+        print('Button Y Clicked')
+
+    def get_button_msg(self):
+        return self.button_msg
 
 
 class JoyPad(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.joystick1 = Joystick()
-        self.joystick2 = Joystick()
+        self.joystick1 = Joystick(name='Left')
+        self.joystick2 = Joystick(name='Right')
         self.joybutton = JoyButton()
 
         self.layout = QHBoxLayout()
@@ -213,3 +284,5 @@ class JoyPad(QWidget):
         self.setWindowTitle('JoyPad')
         self.show()
 
+        rospy.init_node('joy_pad')
+        self.joy_pub = rospy.Publisher('joy', sensor_msgs.msg.Joy, queue_size=1)

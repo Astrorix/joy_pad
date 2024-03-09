@@ -1,11 +1,13 @@
 import sys
 import time
+import rospy
 
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread
 
-from joy import Joystick, JoyPad
+from joy_pad import Joystick, JoyPad
 
+VERBOSE = False
 
 class Thread(QThread):
     def __init__(self, parent):
@@ -13,11 +15,17 @@ class Thread(QThread):
         self.parent = parent
 
     def run(self):
-        for i in range(100):
-            time.sleep(0.5)
-            strength = joystick.joystick1.get_strength()
-            angle = joystick.joystick1.get_angle(in_deg=True)
-            print('Strength : {:.2f} | Angle : {:.2f}º'.format(strength, angle))
+        while(rospy.is_shutdown() == False):
+
+            # time to sleep
+            time.sleep(2)
+            strength_l = joystick.joystick1.get_strength()
+            angle_l = joystick.joystick1.get_angle(in_deg=True)
+            strength_r = joystick.joystick2.get_strength()
+            angle_r = joystick.joystick2.get_angle(in_deg=True)
+            if(VERBOSE == True):
+                print("left: ",'Strength : {:.2f} | Angle : {:.2f}º'.format(strength_l, angle_l))
+                print("right: ",'Strength : {:.2f} | Angle : {:.2f}º'.format(strength_r, angle_r))
 
 
 if __name__ == '__main__':
