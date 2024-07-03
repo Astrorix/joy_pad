@@ -5,8 +5,7 @@ import rospy
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread
 
-from joy_pad import Joystick, JoyPad
-
+from .joy_pad import Joystick, JoyPad
 VERBOSE = False
 
 class Thread(QThread):
@@ -19,16 +18,16 @@ class Thread(QThread):
 
             # time to sleep
             time.sleep(2)
-            strength_l = joystick.joystick1.get_strength()
-            angle_l = joystick.joystick1.get_angle(in_deg=True)
-            strength_r = joystick.joystick2.get_strength()
-            angle_r = joystick.joystick2.get_angle(in_deg=True)
+            strength_l = self.parent.joystick1.get_strength()
+            angle_l = self.parent.joystick1.get_angle(in_deg=True)
+            strength_r = self.parent.joystick2.get_strength()
+            angle_r = self.parent.joystick2.get_angle(in_deg=True)
             if(VERBOSE == True):
                 print("left: ",'Strength : {:.2f} | Angle : {:.2f}º'.format(strength_l, angle_l))
                 print("right: ",'Strength : {:.2f} | Angle : {:.2f}º'.format(strength_r, angle_r))
 
 
-if __name__ == '__main__':
+def main():
     app = QApplication(sys.argv)
     joystick = JoyPad()
 
@@ -36,3 +35,6 @@ if __name__ == '__main__':
     th.start()
 
     sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()

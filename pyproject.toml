@@ -1,0 +1,21 @@
+[project]
+name = "joy_pad"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "maji", email = "maji@connect.hku.hk"},
+]
+dependencies = [
+    "pyqt5",
+    "rospy"
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "MIT"}
+
+[project.scripts]
+joypad = "joy_pad.main:main"
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
